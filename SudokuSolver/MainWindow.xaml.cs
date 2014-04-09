@@ -209,23 +209,23 @@ namespace SudokuSolver
 		{
 			IEnumerable<int> sudokuValues = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-			new ResultWindow(new ForwardCheckingConstraintSatisfactionSearch<SudokuPosition, int>().Find(
+			new ResultWindow(new MinimumRemainingValuesHeuristic<SudokuPosition, int>(new ForwardCheckingConstraintSatisfactionSearch<SudokuPosition, int>()).Find(
 					_sudokuMatrix.SelectMany(row => row)
 								 .Select((cellValue, cellCount) =>
 										 {
 											 SudokuPosition position = new SudokuPosition(cellCount / 9, cellCount % 9, (cellValue != 0));
 
 											 if (cellValue == 0)
-												 return new KeyValuePair<SudokuPosition, DomainSpecification<int>>(position, DomainSpecification.Create(sudokuValues.Except(_sudokuMatrix[position.Row].Union(_sudokuMatrix.SelectMany(row => row.Skip(position.Column)
-																																																												 .Take(1)))
-																																																	   .Union(_sudokuMatrix.Skip(position.Row / 3 * 3)
-																																																						   .Take(3)
-																																																						   .SelectMany(row => row.Skip(position.Column / 3 * 3)
-																																																												 .Take(3)))
-																																																	   .Distinct()
-																																																	   .ToList())));
+												 return new KeyValuePair<SudokuPosition, IEnumerable<int>>(position, sudokuValues);//Except(_sudokuMatrix[position.Row].Union(_sudokuMatrix.SelectMany(row => row.Skip(position.Column)
+																																	//																		  .Take(1)))
+																																	//								.Union(_sudokuMatrix.Skip(position.Row / 3 * 3)
+																																	//													.Take(3)
+																																	//													.SelectMany(row => row.Skip(position.Column / 3 * 3)
+																																	//																		  .Take(3)))
+																																	//								.Distinct()
+																																	//								.ToList()));
 											 else
-												 return new KeyValuePair<SudokuPosition, DomainSpecification<int>>(position, DomainSpecification.Create(cellValue));
+												 return new KeyValuePair<SudokuPosition, IEnumerable<int>>(position, new[] { cellValue });
 										 }), _validSudokuConstraint)).Show();
 		}
 		private static int _GetGroup(SudokuPosition sudokuPosition)

@@ -8,7 +8,14 @@ namespace Andrei15193.ConstraintSatisfaction
 		: IConstraintSatisfactionSearch<TName, TValue>
 	{
 		#region IConstraintSatisfactionSearch<TName,TValue> Members
-		public IEnumerable<IReadOnlyDictionary<TName, TValue>> Find(IEnumerable<KeyValuePair<TName, DomainSpecification<TValue>>> domains, Constraint<IVariables<IVariable<TName, TValue>, IVariable<TName, TValue>>> constraint)
+		public bool IsApproximative
+		{
+			get
+			{
+				return false;
+			}
+		}
+		public IEnumerable<IReadOnlyDictionary<TName, TValue>> Find(IEnumerable<KeyValuePair<TName, IEnumerable<TValue>>> domains, Constraint<IVariables<IVariable<TName, TValue>, IVariable<TName, TValue>>> constraint)
 		{
 			if (domains == null)
 				throw new ArgumentNullException("domains");
@@ -17,7 +24,7 @@ namespace Andrei15193.ConstraintSatisfaction
 
 			int toCheckIndex = 1;
 			var variables = (from domain in domains
-							 orderby domain.Value.Values.Count()
+							 orderby domain.Value.Count()
 							 select new Variable(domain)
 							).ToList();
 			bool hasValues = variables.Aggregate((variables.Count > 0), (hasValue, variable) => (hasValue && variable.MoveNext()));
@@ -51,14 +58,17 @@ namespace Andrei15193.ConstraintSatisfaction
 		private sealed class Variable
 			: IEnumerator<IVariable<TName, TValue>>
 		{
-			public Variable(TName name, DomainSpecification<TValue> domainSpecification)
+			public Variable(TName name, IEnumerable<TValue> values)
 			{
+				if (name == null)
+					throw new ArgumentNullException("value");
+
 				_instance = new Variable<TName, TValue>(name);
-				_domainSpecification = domainSpecification;
+				_values = (values ?? new TValue[0]);
 				Reset();
 			}
-			public Variable(KeyValuePair<TName, DomainSpecification<TValue>> keyValuePair)
-				: this(keyValuePair.Key, keyValuePair.Value)
+			public Variable(KeyValuePair<TName, IEnumerable<TValue>> domainSpecification)
+				: this(domainSpecification.Key, domainSpecification.Value)
 			{
 			}
 
@@ -96,13 +106,13 @@ namespace Andrei15193.ConstraintSatisfaction
 			}
 			public void Reset()
 			{
-				_value = _domainSpecification.Values.GetEnumerator();
+				_value = _values.GetEnumerator();
 			}
 			#endregion
 
 			private Variable<TName, TValue> _instance;
 			private IEnumerator<TValue> _value;
-			private readonly DomainSpecification<TValue> _domainSpecification;
+			private readonly IEnumerable<TValue> _values;
 		}
 	}
 }

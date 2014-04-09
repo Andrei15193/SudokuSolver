@@ -53,4 +53,12 @@ namespace Andrei15193.ConstraintSatisfaction
 		private TValue _value;
 		private readonly TName _name;
 	}
+
+	public static class Variable
+	{
+		public static IVariable<TName, TValue> Create<TName, TValue>(TName name, TValue value = default(TValue))
+		{
+			return new Variable<TName, TValue>(name, value);
+		}
+	}
 }
