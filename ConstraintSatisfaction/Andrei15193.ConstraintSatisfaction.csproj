@@ -41,9 +41,11 @@
   <ItemGroup>
     <Compile Include="Constraint.cs" />
     <Compile Include="ForwardCheckingConstraintSatisfactionSearch.cs" />
+    <Compile Include="HillClimbingConstraintSatisfactionSearch.cs" />
     <Compile Include="IConstraintSatisfactionSearch.cs" />
     <Compile Include="IVariable.cs" />
     <Compile Include="IVariables.cs" />
+    <Compile Include="MinimalBranching.cs" />
     <Compile Include="MinimumRemainingValues.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Variable.cs" />

@@ -23,12 +23,9 @@ namespace Andrei15193.ConstraintSatisfaction
 				throw new ArgumentNullException("constraint");
 
 			int toCheckIndex = 1;
-			var variables = (from domain in domains
-							 orderby domain.Value.Count()
-							 select new Variable(domain)
-							).ToList();
+			var variables = domains.Select(domain => new Variable(domain)).ToList();
 			bool hasValues = variables.Aggregate((variables.Count > 0), (hasValue, variable) => (hasValue && variable.MoveNext()));
-			Predicate<int> moveNext = (moveNextIndex) =>
+			Predicate<int> tryMoveNext = (moveNextIndex) =>
 				{
 					while (moveNextIndex > -1 && !variables[moveNextIndex].MoveNext())
 					{
@@ -46,12 +43,12 @@ namespace Andrei15193.ConstraintSatisfaction
 					if (toCheckIndex == variables.Count - 1)
 					{
 						yield return variables.ToDictionary(variable => variable.Current.Name, variable => variable.Current.Value);
-						hasValues = moveNext(variables.Count - 1);
+						hasValues = tryMoveNext(variables.Count - 1);
 					}
 					else
 						toCheckIndex++;
 				else
-					hasValues = moveNext(toCheckIndex);
+					hasValues = tryMoveNext(toCheckIndex);
 		}
 		#endregion
 
