@@ -1,4 +1,4 @@
-﻿namespace Andrei15193.ConstraintSatisfaction
+﻿namespace Andrei15193.ConstraintSatisfaction.Tuples
 {
 	public interface IVariable
 	{

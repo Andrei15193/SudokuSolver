@@ -39,17 +39,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArcConsistencySearch.cs" />
+    <Compile Include="BinaryConstraint.cs" />
     <Compile Include="Constraint.cs" />
+    <Compile Include="BinaryConstraints.cs" />
     <Compile Include="ForwardCheckingConstraintSatisfactionSearch.cs" />
+    <Compile Include="HeuristicCollection.cs" />
     <Compile Include="HillClimbingConstraintSatisfactionSearch.cs" />
+    <Compile Include="IBinaryConstraints.cs" />
     <Compile Include="IConstraintSatisfactionSearch.cs" />
-    <Compile Include="IVariable.cs" />
-    <Compile Include="IVariables.cs" />
-    <Compile Include="MinimalBranching.cs" />
-    <Compile Include="MinimumRemainingValues.cs" />
+    <Compile Include="IHeuristic.cs" />
+    <Compile Include="Extensions\Collection.cs" />
+    <Compile Include="Tuples\IPair.cs" />
+    <Compile Include="Tuples\IVariable.cs" />
+    <Compile Include="Tuples\IVariables.cs" />
+    <Compile Include="MinimumRemainingValuesHeuristic.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Variable.cs" />
-    <Compile Include="Variables.cs" />
+    <Compile Include="Tuples\Pair.cs" />
+    <Compile Include="Tuples\Variable.cs" />
+    <Compile Include="Tuples\Variables.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

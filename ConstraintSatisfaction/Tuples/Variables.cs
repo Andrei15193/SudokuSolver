@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Andrei15193.ConstraintSatisfaction
+namespace Andrei15193.ConstraintSatisfaction.Tuples
 {
 	public static class Variables
 	{

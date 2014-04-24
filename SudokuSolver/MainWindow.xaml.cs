@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Xml.Linq;
 using Andrei15193.ConstraintSatisfaction;
+using Andrei15193.ConstraintSatisfaction.Tuples;
+using Microsoft.Win32;
 namespace SudokuSolver
 {
-	using System;
-	using System.Xml.Linq;
-	using Microsoft.Win32;
-	using Variables = Andrei15193.ConstraintSatisfaction.IVariables<Andrei15193.ConstraintSatisfaction.IVariable<SudokuPosition, int>, Andrei15193.ConstraintSatisfaction.IVariable<SudokuPosition, int>>;
 	public partial class MainWindow
 		: Window, INotifyPropertyChanged
 	{
@@ -209,28 +209,36 @@ namespace SudokuSolver
 		{
 			IEnumerable<int> sudokuValues = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-			new ResultWindow(new MinimumRemainingValuesHeuristic<SudokuPosition, int>(new ForwardCheckingConstraintSatisfactionSearch<SudokuPosition, int>()).Find(
-					_sudokuMatrix.SelectMany(row => row)
-								 .Select((cellValue, cellCount) =>
-										 {
-											 SudokuPosition position = new SudokuPosition(cellCount / 9, cellCount % 9, (cellValue != 0));
-
-											 if (cellValue == 0)
-												 return new KeyValuePair<SudokuPosition, IEnumerable<int>>(position, sudokuValues);//Except(_sudokuMatrix[position.Row].Union(_sudokuMatrix.SelectMany(row => row.Skip(position.Column)
-																																	//																		  .Take(1)))
-																																	//								.Union(_sudokuMatrix.Skip(position.Row / 3 * 3)
-																																	//													.Take(3)
-																																	//													.SelectMany(row => row.Skip(position.Column / 3 * 3)
-																																	//																		  .Take(3)))
-																																	//								.Distinct()
-																																	//								.ToList()));
-											 else
-												 return new KeyValuePair<SudokuPosition, IEnumerable<int>>(position, new[] { cellValue });
-										 }), _validSudokuConstraint)).Show();
+			new ResultWindow(new ArcConsistencySearch<SudokuPosition, int>().Find(_sudokuMatrix.SelectMany(row => row)
+																								.Select((cellValue, cellCount) =>
+																										{
+																											if (cellValue == 0)
+																												return new KeyValuePair<SudokuPosition, IEnumerable<int>>(new SudokuPosition(cellCount / 9, cellCount % 9, false), sudokuValues);
+																											else
+																												return new KeyValuePair<SudokuPosition, IEnumerable<int>>(new SudokuPosition(cellCount / 9, cellCount % 9, true), new[] { cellValue });
+																										}),
+																				  _sudokuConstraint,
+																				  MinimumRemainingValuesHeuristic<SudokuPosition, int>.Instance)).Show();
 		}
-		private static int _GetGroup(SudokuPosition sudokuPosition)
+
+		private static BinaryConstraints<SudokuPosition, int> _CreateSudokuConstraint()
 		{
-			return ((sudokuPosition.Row / 3 * 3) + sudokuPosition.Column / 3);
+			ICollection<BinaryConstraint<SudokuPosition, int>> sudokuConstraints = new List<BinaryConstraint<SudokuPosition, int>>();
+
+			for (int row = 0; row < 9; row++)
+				for (int column = 0; column < 8; column++)
+					for (int currentColumn = column + 1; currentColumn < 9; currentColumn++)
+					{
+						sudokuConstraints.Add(BinaryConstraint.Create(new SudokuPosition(row, column), new SudokuPosition(row, currentColumn), (IPair<int, int> values) => values.First != values.Second));
+						sudokuConstraints.Add(BinaryConstraint.Create(new SudokuPosition(column, row), new SudokuPosition(currentColumn, row), (IPair<int, int> values) => values.First != values.Second));
+
+						SudokuPosition first = new SudokuPosition(column / 3 + row / 3 * 3, column % 3 + row % 3 * 3);
+						SudokuPosition second = new SudokuPosition(currentColumn / 3 + row / 3 * 3, currentColumn % 3 + row % 3 * 3);
+						if (first.Row != second.Row && first.Column != second.Column)
+							sudokuConstraints.Add(BinaryConstraint.Create(first, second, (IPair<int, int> values) => values.First != values.Second));
+					}
+
+			return new BinaryConstraints<SudokuPosition, int>(sudokuConstraints);
 		}
 
 		private readonly int[][] _sudokuMatrix;
@@ -240,9 +248,6 @@ namespace SudokuSolver
 		private readonly ICommand _incrementCommand;
 		private readonly ICommand _decrementCommand;
 		private readonly ICommand _solveCommand;
-		private static Constraint<Variables> _validSudokuConstraint =
-			Constraint.Create<Variables>(variables => variables.First.Name.Row != variables.Second.Name.Row || variables.First.Value != variables.Second.Value)
-					  .And(Constraint.Create<Variables>(variables => variables.First.Name.Column != variables.Second.Name.Column || variables.First.Value != variables.Second.Value))
-					  .And(Constraint.Create<Variables>(variables => _GetGroup(variables.First.Name) != _GetGroup(variables.Second.Name) || variables.First.Value != variables.Second.Value));
+		private static BinaryConstraints<SudokuPosition, int> _sudokuConstraint = _CreateSudokuConstraint();
 	}
 }
