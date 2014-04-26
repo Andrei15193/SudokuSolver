@@ -209,16 +209,17 @@ namespace SudokuSolver
 		{
 			IEnumerable<int> sudokuValues = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-			new ResultWindow(new ArcConsistencySearch<SudokuPosition, int>().Find(_sudokuMatrix.SelectMany(row => row)
+			new ResultWindow(new ForwardCheckingSearch<SudokuPosition, int>().Find(_sudokuMatrix.SelectMany(row => row)
 																								.Select((cellValue, cellCount) =>
 																										{
 																											if (cellValue == 0)
 																												return new KeyValuePair<SudokuPosition, IEnumerable<int>>(new SudokuPosition(cellCount / 9, cellCount % 9, false), sudokuValues);
 																											else
 																												return new KeyValuePair<SudokuPosition, IEnumerable<int>>(new SudokuPosition(cellCount / 9, cellCount % 9, true), new[] { cellValue });
-																										}),
-																				  _sudokuConstraint,
-																				  MinimumRemainingValuesHeuristic<SudokuPosition, int>.Instance)).Show();
+																										})
+																								.ToList(),
+																				   _sudokuConstraint,
+																				   MinimumRemainingValuesHeuristic<SudokuPosition, int>.Instance)).Show();
 		}
 
 		private static BinaryConstraints<SudokuPosition, int> _CreateSudokuConstraint()

@@ -10,6 +10,10 @@ namespace Andrei15193.ConstraintSatisfaction
 		{
 			return new BinaryConstraint<TName, TValue>(firstVertex, secondVertex, Constraint.Create(constraint));
 		}
+		public static BinaryConstraint<TName, TValue> Create<TName, TValue>(TName firstVertex, TName secondVertex, Constraint<IPair<TValue, TValue>> constraint)
+		{
+			return new BinaryConstraint<TName, TValue>(firstVertex, secondVertex, constraint);
+		}
 	}
 
 	public class BinaryConstraint<TName, TValue>

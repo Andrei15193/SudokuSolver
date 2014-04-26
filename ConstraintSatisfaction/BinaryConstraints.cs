@@ -5,23 +5,67 @@ using System.Linq;
 using Andrei15193.ConstraintSatisfaction.Tuples;
 namespace Andrei15193.ConstraintSatisfaction
 {
+	public static class BinaryConstraints
+	{
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
+		{
+			return new BinaryConstraints<TName, TValue>(binaryConstraints);
+		}
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(params BinaryConstraint<TName, TValue>[] binaryConstraints)
+		{
+			return new BinaryConstraints<TName, TValue>(binaryConstraints);
+		}
+
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(IComparer<TName> vertexComparer, IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
+		{
+			return new BinaryConstraints<TName, TValue>(vertexComparer, binaryConstraints);
+		}
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(IComparer<TName> vertexComparer, params BinaryConstraint<TName, TValue>[] binaryConstraints)
+		{
+			return new BinaryConstraints<TName, TValue>(vertexComparer, binaryConstraints);
+		}
+
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(IEqualityComparer<TName> vertexComparer, IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
+		{
+			return new BinaryConstraints<TName, TValue>(vertexComparer, binaryConstraints);
+		}
+		public static BinaryConstraints<TName, TValue> Create<TName, TValue>(IEqualityComparer<TName> vertexComparer, params BinaryConstraint<TName, TValue>[] binaryConstraints)
+		{
+			return new BinaryConstraints<TName, TValue>(vertexComparer, binaryConstraints);
+		}
+	}
+
 	public class BinaryConstraints<TName, TValue>
 		: IBinaryConstraints<TName, TValue>
 	{
 		public BinaryConstraints(IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
 		{
-			_constraints = new Dictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>>();
-
-			if (binaryConstraints != null)
-				foreach (BinaryConstraint<TName, TValue> binaryConstraint in binaryConstraints)
-				{
-					_Add(binaryConstraint);
-					_Add(new SwapOperandsBinaryConstraint(binaryConstraint));
-				}
+			_constraints = _CreateEmptyConstraintsMap();
+			_AddRange(binaryConstraints);
 		}
 		public BinaryConstraints(params BinaryConstraint<TName, TValue>[] binaryConstraints)
 			: this((IEnumerable<BinaryConstraint<TName, TValue>>)binaryConstraints)
 		{
+		}
+
+		public BinaryConstraints(IComparer<TName> vertexComparer, IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
+		{
+			_constraints = _CreateEmptyConstraintsMap(vertexComparer);
+		}
+		public BinaryConstraints(IComparer<TName> vertexComparer, params BinaryConstraint<TName, TValue>[] binaryConstraints)
+			: this(vertexComparer, (IEnumerable<BinaryConstraint<TName, TValue>>)binaryConstraints)
+		{
+			_constraints = _CreateEmptyConstraintsMap(vertexComparer);
+		}
+
+		public BinaryConstraints(IEqualityComparer<TName> vertexComparer, IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints = null)
+		{
+			_constraints = _CreateEmptyConstraintsMap(vertexComparer);
+		}
+		public BinaryConstraints(IEqualityComparer<TName> vertexComparer, params BinaryConstraint<TName, TValue>[] binaryConstraints)
+			: this(vertexComparer, (IEnumerable<BinaryConstraint<TName, TValue>>)binaryConstraints)
+		{
+			_constraints = _CreateEmptyConstraintsMap(vertexComparer);
 		}
 
 		#region IBinaryConstraints<TName,TValue> Members
@@ -73,7 +117,27 @@ namespace Andrei15193.ConstraintSatisfaction
 			return GetEnumerator();
 		}
 		#endregion
+		public static BinaryConstraints<TName, TValue> Empty
+		{
+			get
+			{
+				lock (_emptyLock)
+					if (_empty == null)
+						_empty = new BinaryConstraints<TName, TValue>();
 
+				return _empty;
+			}
+		}
+
+		private void _AddRange(IEnumerable<BinaryConstraint<TName, TValue>> binaryConstraints)
+		{
+			if (binaryConstraints != null)
+				foreach (BinaryConstraint<TName, TValue> binaryConstraint in binaryConstraints)
+				{
+					_Add(binaryConstraint);
+					_Add(new SwapOperandsBinaryConstraint(binaryConstraint));
+				}
+		}
 		private void _Add(BinaryConstraint<TName, TValue> binaryConstraint)
 		{
 			if (binaryConstraint != null)
@@ -94,8 +158,32 @@ namespace Andrei15193.ConstraintSatisfaction
 			}
 		}
 
-		private readonly IDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>> _constraints;
+		private IDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>> _CreateEmptyConstraintsMap()
+		{
+			if (typeof(IComparable<TName>).IsAssignableFrom(typeof(TName))
+				|| typeof(IComparable).IsAssignableFrom(typeof(TName)))
+				return new SortedDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>>();
+			else
+				return new Dictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>>();
+		}
+		private IDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>> _CreateEmptyConstraintsMap(IComparer<TName> vertexComparer)
+		{
+			if (vertexComparer == null)
+				throw new ArgumentNullException("vertexComparer");
 
+			return new SortedDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>>(vertexComparer);
+		}
+		private IDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>> _CreateEmptyConstraintsMap(IEqualityComparer<TName> vertexComparer)
+		{
+			if (vertexComparer == null)
+				throw new ArgumentNullException("vertexComparer");
+
+			return new Dictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>>(vertexComparer);
+		}
+
+		private readonly IDictionary<TName, IDictionary<TName, BinaryConstraint<TName, TValue>>> _constraints;
+		private static BinaryConstraints<TName, TValue> _empty = null;
+		private static readonly object _emptyLock = new object();
 
 		private sealed class SwapOperandsBinaryConstraint
 			: BinaryConstraint<TName, TValue>
