@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Andrei15193.ConstraintSatisfaction.Extensions;
 using Andrei15193.ConstraintSatisfaction.Tuples;
 namespace Andrei15193.ConstraintSatisfaction
 {
@@ -11,33 +12,24 @@ namespace Andrei15193.ConstraintSatisfaction
 	{
 		public ForwardCheckingSearch()
 		{
-			if (typeof(IComparable<TName>).IsAssignableFrom(typeof(TName))
-				|| typeof(IComparable).IsAssignableFrom(typeof(TName)))
-			{
-				_CreateEmptySolutionMap = ((capacity) => new SortedList<TName, TValue>(capacity));
-				_CloneSolution = ((solution) => new SortedList<TName, TValue>(solution));
-			}
-			else
-			{
-				_CreateEmptySolutionMap = ((capacity) => new Dictionary<TName, TValue>(capacity));
-				_CloneSolution = ((solution) => new Dictionary<TName, TValue>(solution));
-			}
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(MapType.SortedList);
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(MapType.SortedList);
 		}
 		public ForwardCheckingSearch(IComparer<TName> variableNameComparer)
 		{
 			if (variableNameComparer == null)
 				throw new ArgumentNullException("variableNameComparer");
 
-			_CreateEmptySolutionMap = ((capacity) => new SortedList<TName, TValue>(capacity, variableNameComparer));
-			_CloneSolution = ((solution) => new SortedList<TName, TValue>(solution, variableNameComparer));
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(variableNameComparer, MapType.SortedList);
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(variableNameComparer, MapType.SortedList);
 		}
 		public ForwardCheckingSearch(IEqualityComparer<TName> variableNameComparer)
 		{
 			if (variableNameComparer == null)
 				throw new ArgumentNullException("variableNameComparer");
 
-			_CreateEmptySolutionMap = ((capacity) => new Dictionary<TName, TValue>(capacity, variableNameComparer));
-			_CloneSolution = ((solution) => new Dictionary<TName, TValue>(solution, variableNameComparer));
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(variableNameComparer);
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(variableNameComparer);
 		}
 
 		#region IConstraintSatisfactionSearch<TName,TValue> Members
@@ -58,7 +50,7 @@ namespace Andrei15193.ConstraintSatisfaction
 			{
 				int variableIndex = -1;
 				Variable[] variables = new Variable[domains.Count()];
-				IDictionary<TName, TValue> partialSolution = _CreateEmptySolutionMap(variables.Length);
+				IDictionary<TName, TValue> partialSolution = _CreateEmptySolutionMap();
 				IReadOnlyDictionary<TName, TValue> partialSolutionReadOnlyView = new ReadOnlyDictionary<TName, TValue>(partialSolution);
 				IEnumerable<KeyValuePair<TName, IEnumerable<TValue>>> unexploredDomains;
 
@@ -113,11 +105,9 @@ namespace Andrei15193.ConstraintSatisfaction
 			return Find(domains, null, solutionConstraint, heuristic);
 		}
 		#endregion
-		private readonly SolutionMapCloner _CloneSolution;
-		private readonly EmptySolutionMapCreator _CreateEmptySolutionMap;
 
-		private delegate IDictionary<TName, TValue> EmptySolutionMapCreator(int capacity);
-		private delegate IDictionary<TName, TValue> SolutionMapCloner(IDictionary<TName, TValue> solution);
+		private readonly Func<IDictionary<TName, TValue>> _CreateEmptySolutionMap;
+		private readonly Func<IDictionary<TName, TValue>, IDictionary<TName, TValue>> _CloneSolution;
 
 		private sealed class Variable
 			: IVariable<TName, TValue>, IEnumerator<TValue>

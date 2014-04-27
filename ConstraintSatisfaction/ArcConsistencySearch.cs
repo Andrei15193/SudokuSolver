@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Andrei15193.ConstraintSatisfaction.Extensions;
 using Andrei15193.ConstraintSatisfaction.Tuples;
 namespace Andrei15193.ConstraintSatisfaction
 {
@@ -10,33 +11,24 @@ namespace Andrei15193.ConstraintSatisfaction
 	{
 		public ArcConsistencySearch()
 		{
-			if (typeof(IComparable<TName>).IsAssignableFrom(typeof(TName))
-				|| typeof(IComparable).IsAssignableFrom(typeof(TName)))
-			{
-				_CreateEmptyIndexMap = ((capacity) => new SortedList<TName, IEnumerable<TValue>>(capacity));
-				_CloneSolution = ((solution) => new SortedList<TName, TValue>(solution));
-			}
-			else
-			{
-				_CreateEmptyIndexMap = ((capacity) => new Dictionary<TName, IEnumerable<TValue>>(capacity));
-				_CloneSolution = ((solution) => new Dictionary<TName, TValue>(solution));
-			}
+			_CreateIndex = MapFactory.FromCollectionFactoryDelegate<TName, IEnumerable<TValue>>(MapType.SortedList);
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(MapType.SortedList);
 		}
 		public ArcConsistencySearch(IComparer<TName> variableNameComparer)
 		{
 			if (variableNameComparer == null)
 				throw new ArgumentNullException("variableNameComparer");
 
-			_CreateEmptyIndexMap = ((capacity) => new SortedList<TName, IEnumerable<TValue>>(capacity, variableNameComparer));
-			_CloneSolution = ((solution) => new SortedList<TName, TValue>(solution, variableNameComparer));
+			_CreateIndex = MapFactory.FromCollectionFactoryDelegate<TName, IEnumerable<TValue>>(variableNameComparer, MapType.SortedList);
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(variableNameComparer, MapType.SortedList);
 		}
 		public ArcConsistencySearch(IEqualityComparer<TName> variableNameComparer)
 		{
 			if (variableNameComparer == null)
 				throw new ArgumentNullException("variableNameComparer");
 
-			_CreateEmptyIndexMap = ((capacity) => new Dictionary<TName, IEnumerable<TValue>>(capacity, variableNameComparer));
-			_CloneSolution = ((solution) => new Dictionary<TName, TValue>(solution, variableNameComparer));
+			_CreateIndex = MapFactory.FromCollectionFactoryDelegate<TName, IEnumerable<TValue>>(variableNameComparer);
+			_CloneSolution = MapFactory.FromDictionaryFactoryDelegate<TName, TValue>(variableNameComparer);
 		}
 
 		#region IConstraintSatisfactionSearch<TName,TValue> Members
@@ -123,23 +115,8 @@ namespace Andrei15193.ConstraintSatisfaction
 
 			return solutions.Select(solution => new ReadOnlyDictionary<TName, TValue>(solution)).ToList();
 		}
-		private IDictionary<TName, IEnumerable<TValue>> _CreateIndex(IEnumerable<KeyValuePair<TName, IEnumerable<TValue>>> domains)
-		{
-			if (domains == null)
-				throw new ArgumentNullException("domains");
 
-			IDictionary<TName, IEnumerable<TValue>> indexedDomains = _CreateEmptyIndexMap(domains.Count());
-
-			foreach (KeyValuePair<TName, IEnumerable<TValue>> domain in domains)
-				indexedDomains.Add(domain);
-
-			return indexedDomains;
-		}
-
-		private readonly SolutionMapCloner _CloneSolution;
-		private readonly DomainIndexMapCreator _CreateEmptyIndexMap;
-
-		private delegate IDictionary<TName, TValue> SolutionMapCloner(IDictionary<TName, TValue> solution);
-		private delegate IDictionary<TName, IEnumerable<TValue>> DomainIndexMapCreator(int capacity);
+		private readonly Func<IDictionary<TName, TValue>, IDictionary<TName, TValue>> _CloneSolution;
+		private readonly Func<IEnumerable<KeyValuePair<TName, IEnumerable<TValue>>>, IDictionary<TName, IEnumerable<TValue>>> _CreateIndex;
 	}
 }

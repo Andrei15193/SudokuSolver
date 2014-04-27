@@ -43,6 +43,8 @@
     <Compile Include="BinaryConstraint.cs" />
     <Compile Include="Constraint.cs" />
     <Compile Include="BinaryConstraints.cs" />
+    <Compile Include="Extensions\MapFactory.cs" />
+    <Compile Include="Extensions\MapType.cs" />
     <Compile Include="ForwardCheckingSearch.cs" />
     <Compile Include="HeuristicCollection.cs" />
     <Compile Include="IBinaryConstraints.cs" />

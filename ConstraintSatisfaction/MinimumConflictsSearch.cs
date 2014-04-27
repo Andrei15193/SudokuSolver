@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Andrei15193.ConstraintSatisfaction.Extensions;
 using Andrei15193.ConstraintSatisfaction.Tuples;
 namespace Andrei15193.ConstraintSatisfaction
 {
@@ -14,18 +15,7 @@ namespace Andrei15193.ConstraintSatisfaction
 				throw new ArgumentNullException("Must be strictly positive!", "numberOfSteps");
 
 			_numberOfSteps = numberOfSteps;
-
-			if (typeof(IComparable<TName>).IsAssignableFrom(typeof(TName))
-				|| typeof(IComparable).IsAssignableFrom(typeof(TName)))
-			{
-				_CreateEmptyIndexMap = ((capacity) => new SortedList<TName, IEnumerable<TValue>>(capacity));
-				_CreateEmptySolutionMap = ((capacity) => new SortedList<TName, TValue>(capacity));
-			}
-			else
-			{
-				_CreateEmptyIndexMap = ((capacity) => new Dictionary<TName, IEnumerable<TValue>>(capacity));
-				_CreateEmptySolutionMap = ((capacity) => new Dictionary<TName, TValue>(capacity));
-			}
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(MapType.SortedList);
 		}
 		public MinimumConflictsSearch(IComparer<TName> variableNameComparer, int numberOfSteps = 1000)
 		{
@@ -35,8 +25,7 @@ namespace Andrei15193.ConstraintSatisfaction
 				throw new ArgumentNullException("variableNameComparer");
 
 			_numberOfSteps = numberOfSteps;
-			_CreateEmptyIndexMap = ((capacity) => new SortedList<TName, IEnumerable<TValue>>(capacity, variableNameComparer));
-			_CreateEmptySolutionMap = ((capacity) => new SortedList<TName, TValue>(capacity, variableNameComparer));
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(variableNameComparer, MapType.SortedList);
 		}
 		public MinimumConflictsSearch(IEqualityComparer<TName> variableNameComparer, int numberOfSteps = 1000)
 		{
@@ -46,8 +35,7 @@ namespace Andrei15193.ConstraintSatisfaction
 				throw new ArgumentNullException("variableNameComparer");
 
 			_numberOfSteps = numberOfSteps;
-			_CreateEmptyIndexMap = ((capacity) => new Dictionary<TName, IEnumerable<TValue>>(capacity, variableNameComparer));
-			_CreateEmptySolutionMap = ((capacity) => new Dictionary<TName, TValue>(capacity, variableNameComparer));
+			_CreateEmptySolutionMap = MapFactory.FactoryDelegate<TName, TValue>(variableNameComparer);
 		}
 
 		#region IConstraintSatisfactionSearch<TName,TVale> Members
@@ -62,7 +50,7 @@ namespace Andrei15193.ConstraintSatisfaction
 				return new IReadOnlyDictionary<TName, TValue>[0];
 
 			int stepCount = 0, totalConflicts;
-			IDictionary<TName, TValue> solution = _CreateEmptySolutionMap(domains.Count());
+			IDictionary<TName, TValue> solution = _CreateEmptySolutionMap();
 			IReadOnlyDictionary<TName, TValue> solutionReadOnlyView = new ReadOnlyDictionary<TName, TValue>(solution);
 
 			foreach (KeyValuePair<TName, IEnumerable<TValue>> domain in domains)
@@ -112,22 +100,8 @@ namespace Andrei15193.ConstraintSatisfaction
 		}
 		#endregion
 
-		private IDictionary<TName, IEnumerable<TValue>> _CreateIndex(IEnumerable<KeyValuePair<TName, IEnumerable<TValue>>> domains)
-		{
-			if (domains == null)
-				throw new ArgumentNullException("domains");
-
-			IDictionary<TName, IEnumerable<TValue>> indexedDomains = _CreateEmptyIndexMap(domains.Count());
-
-			foreach (KeyValuePair<TName, IEnumerable<TValue>> domain in domains)
-				indexedDomains.Add(domain);
-
-			return indexedDomains;
-		}
-
 		private readonly int _numberOfSteps;
-		private readonly DomainIndexMapCreator _CreateEmptyIndexMap;
-		private readonly EmptySolutionMapCreator _CreateEmptySolutionMap;
+		private readonly Func<IDictionary<TName, TValue>> _CreateEmptySolutionMap;
 
 		private delegate IDictionary<TName, IEnumerable<TValue>> DomainIndexMapCreator(int capacity);
 		private delegate IDictionary<TName, TValue> EmptySolutionMapCreator(int capacity);
