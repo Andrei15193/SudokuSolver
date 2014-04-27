@@ -34,6 +34,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Andrei15193.ConstraintSatisfaction, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>Dependencies\Andrei15193.ConstraintSatisfaction.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -102,12 +106,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ConstraintSatisfaction\Andrei15193.ConstraintSatisfaction.csproj">
-      <Project>{7c7320fd-f0c4-48eb-aeb1-76b2574f3971}</Project>
-      <Name>Andrei15193.ConstraintSatisfaction</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
