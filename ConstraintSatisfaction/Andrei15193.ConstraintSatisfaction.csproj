@@ -45,11 +45,11 @@
     <Compile Include="BinaryConstraints.cs" />
     <Compile Include="ForwardCheckingSearch.cs" />
     <Compile Include="HeuristicCollection.cs" />
-    <Compile Include="HillClimbingConstraintSatisfactionSearch.cs" />
     <Compile Include="IBinaryConstraints.cs" />
     <Compile Include="IConstraintSatisfactionSearch.cs" />
     <Compile Include="IHeuristic.cs" />
     <Compile Include="Extensions\Collection.cs" />
+    <Compile Include="MinimumConflictsSearch.cs" />
     <Compile Include="Tuples\IPair.cs" />
     <Compile Include="Tuples\IVariable.cs" />
     <Compile Include="Tuples\IVariables.cs" />
